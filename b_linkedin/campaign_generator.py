@@ -79,25 +79,25 @@ Keep each post unique, strategic, and engaging.
 
 
 
-# def generate_image(prompt: str) -> str:
-#     try:
-#         output = replicate.run(
-#             "stability-ai/sdxl:5c68dbb7e05b08f376a8b1c85a1cc3f3f5a7f147ddfe304ea181eb43c42304e4",
-#             input={"prompt": prompt}
-#         )
-#         # `output` is a list with image URL(s)
-#         return output[0] if output else None
-#     except Exception as e:
-#         print(f"[Image Generation Error]: {e}")
-#         return None
-
-
 def generate_image(prompt: str) -> str:
-    """
-    Generates image using Replicate (SDXL model) and returns the image URL.
-    """
-    output = replicate.run(
-        "stability-ai/sdxl:1f7cf94f504b02d5750487b1e9ed75bfa37e8eaa0482e6b5e0f6ee3d28eb6ef1",
-        input={"prompt": prompt}
-    )
-    return output[0]  # returns URL string
+    try:
+        output = replicate.run(
+            "stability-ai/sdxl:5c68dbb7e05b08f376a8b1c85a1cc3f3f5a7f147ddfe304ea181eb43c42304e4",
+            input={"prompt": prompt}
+        )
+        # `output` is a list with image URL(s)
+        return output[0] if output else None
+    except Exception as e:
+        print(f"[Image Generation Error]: {e}")
+        return None
+
+
+# def generate_image(prompt: str) -> str:
+#     """
+#     Generates image using Replicate (SDXL model) and returns the image URL.
+#     """
+#     output = replicate.run(
+#         "stability-ai/sdxl:1f7cf94f504b02d5750487b1e9ed75bfa37e8eaa0482e6b5e0f6ee3d28eb6ef1",
+#         input={"prompt": prompt}
+#     )
+#     return output[0]  # returns URL string

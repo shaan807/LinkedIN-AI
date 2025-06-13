@@ -1,166 +1,93 @@
 import streamlit as st
-import os
-import google.generativeai as genai
-from dotenv import load_dotenv
-import json
+from linkedin_proxycurl import fetch_profile_data, fetch_recommendations
+from outreach_generator import generate_outreach
 import requests
+from io import BytesIO
+from fpdf import FPDF
+import os
 
-load_dotenv()
-
-def analyze_profile_for_recommendations(profile_data):
-    """Analyze LinkedIn profile to generate connection recommendations"""
-    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    
-    prompt = f"""
-    Analyze this LinkedIn profile data and generate connection recommendations:
-    
-    {json.dumps(profile_data, indent=2)}
-    
-    Provide recommendations in the following format:
-    1. Career Goals (3-5 specific goals)
-    2. Target Roles (3-5 specific roles)
-    3. Target Industries (3-5 specific industries)
-    4. Connection Criteria (specific criteria for valuable connections)
-    
-    Format as JSON with these exact keys:
-    {{
-        "career_goals": [string],
-        "target_roles": [string],
-        "target_industries": [string],
-        "connection_criteria": [string]
-    }}
-    """
-    
-    response = model.generate_content(prompt)
-    try:
-        return json.loads(response.text)
-    except:
-        return {
-            "career_goals": ["Unable to analyze profile"],
-            "target_roles": ["Please try again"],
-            "target_industries": ["Please try again"],
-            "connection_criteria": ["Please try again"]
-        }
-
-def generate_personalized_message(profile_data, target_profile):
-    """Generate a personalized connection message"""
-    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    
-    prompt = f"""
-    Generate a personalized LinkedIn connection message based on:
-    
-    Your Profile:
-    {json.dumps(profile_data, indent=2)}
-    
-    Target Profile:
-    {json.dumps(target_profile, indent=2)}
-    
-    Requirements:
-    1. Reference shared interests/background
-    2. Keep it professional but friendly
-    3. Focus on mutual value
-    4. Stay within LinkedIn's character limit
-    5. Include a clear call to action
-    
-    Format as JSON with these keys:
-    {{
-        "message": string,
-        "shared_interests": [string],
-        "value_proposition": string
-    }}
-    """
-    
-    response = model.generate_content(prompt)
-    try:
-        return json.loads(response.text)
-    except:
-        return {
-            "message": "Unable to generate message",
-            "shared_interests": ["Please try again"],
-            "value_proposition": "Please try again"
-        }
+# DO NOT call st.set_page_config() here; it's already set in the main app.py
 
 def main():
-    st.title("🤝 LinkedIn Outreach Generator")
-    
-    # Profile URL Input
-    st.header("Enter LinkedIn Profile URL")
-    profile_url = st.text_input(
-        "LinkedIn Profile URL",
-        help="Enter the LinkedIn profile URL to analyze"
-    )
-    
-    if st.button("Analyze Profile"):
-        if not profile_url:
-            st.warning("Please enter a LinkedIn profile URL.")
-            return
-            
-        with st.spinner("Analyzing profile..."):
-            # Here you would normally fetch profile data using Proxycurl
-            # For now, we'll use dummy data for demonstration
-            profile_data = {
-                "full_name": "John Doe",
-                "headline": "Software Engineer",
-                "summary": "Passionate about technology and innovation",
-                "experience": ["Company A", "Company B"],
-                "education": ["University X"],
-                "skills": ["Python", "AI", "Machine Learning"]
-            }
-            
-            recommendations = analyze_profile_for_recommendations(profile_data)
-            
-        st.success("✅ Analysis complete!")
-        
-        # Display Recommendations
-        st.header("Connection Recommendations")
-        
-        st.subheader("Career Goals")
-        for goal in recommendations['career_goals']:
-            st.write(f"🎯 {goal}")
-            
-        st.subheader("Target Roles")
-        for role in recommendations['target_roles']:
-            st.write(f"👨‍💼 {role}")
-            
-        st.subheader("Target Industries")
-        for industry in recommendations['target_industries']:
-            st.write(f"🏢 {industry}")
-            
-        st.subheader("Connection Criteria")
-        for criteria in recommendations['connection_criteria']:
-            st.write(f"✅ {criteria}")
-        
-        # Generate Message
-        if st.button("Generate Connection Message"):
-            # Here you would normally fetch target profile data
-            # For now, we'll use dummy data
-            target_profile = {
-                "full_name": "Jane Smith",
-                "headline": "AI Researcher",
-                "summary": "Working on cutting-edge AI solutions",
-                "experience": ["Company C"],
-                "education": ["University Y"],
-                "skills": ["AI", "Machine Learning", "Python"]
-            }
-            
-            with st.spinner("Generating personalized message..."):
-                message_data = generate_personalized_message(profile_data, target_profile)
-                
-            st.subheader("Personalized Message")
-            st.write(message_data['message'])
-            
-            st.subheader("Shared Interests")
-            for interest in message_data['shared_interests']:
-                st.write(f"🤝 {interest}")
-                
-            st.subheader("Value Proposition")
-            st.write(message_data['value_proposition'])
-            
-            if st.button("Copy Message"):
-                st.experimental_set_clipboard(message_data['message'])
-                st.success("Copied to clipboard!")
+    st.title("🚀 LinkedIn Booster - Outreach + Campaign")
 
-if __name__ == "__main__":
-    main()
+    # Input
+    linkedin_url = st.text_input("🔗 Enter your LinkedIn Profile URL:")
+
+    final_text = ""  # Placeholder for PDF generation
+
+    if linkedin_url:
+        try:
+            with st.spinner("🔍 Fetching profile data..."):
+                profile_data = fetch_profile_data(linkedin_url)
+            with st.spinner("📡 Getting recommended connections..."):
+                recommended_connections = fetch_recommendations(linkedin_url)
+
+            st.image(profile_data.get("profile_picture_url"), width=100)
+            st.markdown(f"### {profile_data.get('full_name')}")
+            st.markdown(f"**{profile_data.get('headline')}**")
+            st.markdown(profile_data.get("summary"))
+            st.markdown("**Experiences:**")
+            for exp in profile_data.get("experiences", []):
+                st.markdown(f"- {exp}")
+
+            if st.button("🎯 Generate Outreach & Campaign Plan"):
+                with st.spinner("🧠 Generating personalized campaign and outreach..."):
+                    final_text = generate_outreach(profile_data, recommended_connections)
+                    st.success("✅ Campaign & Outreach Ready!")
+                    st.markdown(final_text)
+
+                    # Extract image generation prompts
+                    prompts = []
+                    for line in final_text.splitlines():
+                        if "Image Generation Prompt:" in line:
+                            prompts.append(line.split("Image Generation Prompt:")[1].strip())
+
+                    if prompts:
+                        prompt_to_copy = st.selectbox("🎨 Select an Image Generation Prompt:", prompts)
+                        if st.button("📋 Copy Prompt"):
+                            st.code(prompt_to_copy)
+
+                        if st.button("🖼️ Generate Image from Prompt"):
+                            try:
+                                def download_image_from_prompt(prompt: str) -> bytes:
+                                    url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '%20')}"
+                                    response = requests.get(url)
+                                    response.raise_for_status()
+                                    return response.content
+
+                                st.info("Generating image...")
+                                img_bytes = download_image_from_prompt(prompt_to_copy)
+                                st.image(img_bytes)
+                                st.download_button(
+                                    label="⬇️ Download Generated Image",
+                                    data=img_bytes,
+                                    file_name="generated_image.jpg",
+                                    mime="image/jpeg"
+                                )
+                            except Exception as e:
+                                st.error(f"Image generation failed: {e}")
+
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
+    else:
+        st.warning("Please enter a valid LinkedIn profile URL.")
+
+    # PDF Export
+    if final_text:
+        if st.button("📄 Download as PDF"):
+            def generate_pdf(content: str, filename="campaign.pdf"):
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", size=12)
+                for line in content.split("\n"):
+                    try:
+                        pdf.cell(200, 10, txt=line.encode('latin-1', 'ignore').decode('latin-1'), ln=True)
+                    except:
+                        pdf.cell(200, 10, txt="[Unprintable line]", ln=True)
+                pdf.output(filename)
+
+            generate_pdf(final_text)
+            with open("campaign.pdf", "rb") as file:
+                st.download_button(label="⬇️ Download PDF", data=file, file_name="linkedin_campaign.pdf", mime="application/pdf")
+

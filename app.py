@@ -39,13 +39,13 @@ st.markdown("""
 
 def save_api_keys(google_api_key, proxycurl_api_key):
     """Save API keys to .env file"""
-    env_content = f"""GOOGLE_API_KEY={google_api_key}
-PROXYCURL_API_KEY={proxycurl_api_key}"""
-    
-    with open('.env', 'w') as f:
+    env_content = f"""
+GOOGLE_API_KEY={google_api_key}
+PROXYCURL_API_KEY={proxycurl_api_key}
+"""
+    with open(".env", "w") as f:
         f.write(env_content)
     
-    # Update environment variables
     os.environ['GOOGLE_API_KEY'] = google_api_key
     os.environ['PROXYCURL_API_KEY'] = proxycurl_api_key
 
@@ -69,21 +69,21 @@ def main():
             help="Enter your Proxycurl API key for LinkedIn data"
         )
         
-        if st.button("Save API Keys"):
+        if st.button("💾 Save API Keys"):
             if google_api_key and proxycurl_api_key:
                 save_api_keys(google_api_key, proxycurl_api_key)
-                st.success("API keys saved successfully!")
+                st.success("✅ API keys saved successfully!")
             else:
-                st.error("Please enter both API keys")
+                st.error("❌ Please enter both API keys.")
         
         st.markdown("---")
         
         # Navigation
-        st.title("Navigation")
+        st.title("📂 Navigation")
         page = option_menu(
             menu_title=None,
-            options=["Profile Analyzer", "Competitor Analyzer", "Post Analyzer", "Outreach Generator"],
-            icons=["📊", "🔍", "📝", "🤝"],
+            options=["Profile Analyzer", "Competitor Analyzer", "Campaign Designer", "Outreach Generator"],
+            icons=["person-lines-fill", "people", "file-earmark-text", "envelope-open-heart"],
             default_index=0,
         )
         
@@ -92,40 +92,40 @@ def main():
         # Footer
         st.markdown("""
         <div class="footer">
-            <p>Get your API keys:</p>
-            <a href="https://makersuite.google.com/app/apikey" target="_blank">Google API Key</a> |
-            <a href="https://nubela.co/proxycurl" target="_blank">Proxycurl API Key</a>
+            <p>Need API keys? → 
+            <a href="https://makersuite.google.com/app/apikey" target="_blank">Google (Gemini)</a> |
+            <a href="https://nubela.co/proxycurl" target="_blank">Proxycurl</a>
+            </p>
         </div>
         """, unsafe_allow_html=True)
 
     # Main content
     st.title("🚀 LinkedIn Booster Suite")
-    
-    # Check for API keys
+
     if not os.getenv("GOOGLE_API_KEY") or not os.getenv("PROXYCURL_API_KEY"):
         st.warning("""
-        ⚠️ Please enter your API keys in the sidebar to use all features:
-        - Google API Key (for Gemini AI)
+        ⚠️ Please enter your API keys in the sidebar to unlock full functionality:
+        - Google API Key (for Gemini)
         - Proxycurl API Key (for LinkedIn data)
         """)
     
-    # Display selected page
+    # Load selected page
     try:
         if page == "Profile Analyzer":
             from a_linkedin.app import main as profile_analyzer
             profile_analyzer()
         elif page == "Competitor Analyzer":
-            from b_linkedin.app import main as competitor_analyzer
+            from c_linkedin.app import main as competitor_analyzer
             competitor_analyzer()
-        elif page == "Post Analyzer":
-            from c_linkedin.app import main as post_analyzer
-            post_analyzer()
+        elif page == "Campaign Designer":
+            from b_linkedin.app import main as campaign_designer
+            campaign_designer()
         elif page == "Outreach Generator":
             from d_linkedin.app import main as outreach_generator
             outreach_generator()
     except Exception as e:
-        st.error(f"Error loading {page}: {str(e)}")
-        st.info("Please ensure all required dependencies are installed and API keys are set correctly.")
+        st.error(f"❌ Error loading {page}: {str(e)}")
+        st.info("Please ensure all required files and dependencies are correctly set up.")
 
 if __name__ == "__main__":
-    main() 
+    main()
