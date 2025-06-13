@@ -1,6 +1,6 @@
 import streamlit as st
-from linkedin_proxycurl import fetch_profile_data, fetch_recommendations
-from outreach_generator import generate_outreach
+from d_linkedin.linkedin_proxycurl import fetch_profile_data, fetch_recommendations
+from d_linkedin.outreach_generator import generate_outreach
 import requests
 from io import BytesIO
 from fpdf import FPDF

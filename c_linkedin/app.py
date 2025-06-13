@@ -1,5 +1,5 @@
 import streamlit as st
-from competitor import analyze_competitor_strategy, analyze_competitor_images
+from c_linkedin.competitor import analyze_competitor_strategy, analyze_competitor_images
 
 def main():
     st.title("🔍 Competitor Strategy Analyzer")
